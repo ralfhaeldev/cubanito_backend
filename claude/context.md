@@ -224,5 +224,3 @@ src/
 
 👁️ Vistas por Rol
 RolAccesoSuper AdminDashboard multi-sede, gestión de sedes, usuarios globalesAdmin SedeDashboard sede, pedidos, caja, movimientos, reportes, productos, usuariosMeseroCrear pedidos, ver sus pedidos activosCocinaVer pedidos en cola, cambiar estado a En ProcesoDomiciliarioVer pedidos asignados a domicilio, marcar como Enviado
-
-¿Arrancamos a definir los endpoints del API, el modelo de datos detallado, o prefieres que generemos ya la estructura base del proyecto en código?
