@@ -27,7 +27,7 @@ export class IngredientsController {
    * Solo ADMIN y SUPER_ADMIN pueden crear ingredientes
    */
   @Post()
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Crear ingrediente',
     description: 'Crea un nuevo ingrediente vinculando un producto preparado con un insumo del inventario',
@@ -92,7 +92,7 @@ export class IngredientsController {
    * Solo ADMIN y SUPER_ADMIN pueden actualizar ingredientes
    */
   @Patch(':id')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Actualizar ingrediente',
     description: 'Actualiza la cantidad de un ingrediente específico',
@@ -117,7 +117,7 @@ export class IngredientsController {
    * Solo ADMIN y SUPER_ADMIN pueden eliminar ingredientes
    */
   @Delete(':id')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Eliminar ingrediente',
     description: 'Elimina un ingrediente de un producto preparado',

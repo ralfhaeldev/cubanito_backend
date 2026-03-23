@@ -8,4 +8,7 @@ export abstract class AuthRepository {
   abstract create(createUserDto: CreateUserDto): Promise<LoginResponse>;
   abstract login(loginUserDto: LoginUserDto): Promise<LoginResponse>;
   abstract changePassword(userId: string, changePasswordDto: ChangePasswordDto): Promise<UserEntity>;
+  abstract findAll(): Promise<Omit<UserEntity, 'pawssowrd'>[]>;
+  abstract findOne(id: string): Promise<UserEntity>;
+  abstract updateUser(id: string, updateDto: Partial<CreateUserDto & { isActive: boolean; branchId: string | null }>): Promise<UserEntity>;
 }

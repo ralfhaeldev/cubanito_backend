@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AutController } from './interfaces/controllers/aut.controller';
+import { AuthController, UsuariosController } from './interfaces/controllers/auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './domain/entities/user.entity';
-import { CreateAutUseCase } from './application/use-cases/create-aut.use-case';
+import { CreateAuthUseCase } from './application/use-cases/create-auth.use-case';
 import { TypeormAuthRepository } from './infrastructure/repositories/typeorm-auth.repository';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -24,10 +24,10 @@ import { AuthRepository } from './domain/auth-repository.interface';
       },
     }),
   ],
-  controllers: [AutController],
+  controllers: [AuthController, UsuariosController],
   providers: [
     JwtStrategy,
-    CreateAutUseCase,
+    CreateAuthUseCase,
     TypeormAuthRepository,
     {
       provide: AuthRepository,

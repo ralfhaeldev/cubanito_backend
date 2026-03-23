@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { ProductStatus, ProductType } from 'src/common/enums/product-status.enum';
+import { ProductType } from 'src/common/enums/product-status.enum';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
 import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
 
@@ -8,35 +8,33 @@ export class ProductEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('text', {
-    unique: true,
-  })
+  @Column('text', { unique: true })
   title: string;
-
-  @Column('text')
-  description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
   sellingPrice: number;
 
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  purchaseCost: number;
+
   @Column('enum', { enum: ProductType, default: ProductType.SIMPLE })
   type: ProductType;
 
-  @Column('enum', { enum: ProductStatus, default: ProductStatus.ACTIVE })
-  status: ProductStatus;
+  @Column('bool', { default: true })
+  isActive: boolean;
+
+  /** Only for tipo === 'simple': link to the inventory item */
+  @Column('uuid', { nullable: true })
+  itemInventarioId: string | null;
 
   @Column('uuid', { nullable: true })
-  branchId: string;
+  branchId: string | null;
 
-  @ManyToOne(() => BranchEntity, (branch) => branch.products, {
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(() => BranchEntity, (branch) => branch.products, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'branchId' })
   branch: BranchEntity;
 
-  @OneToMany(() => IngredientsEntity, (ingredient) => ingredient.product, {
-    cascade: true,
-  })
+  @OneToMany(() => IngredientsEntity, (ingredient) => ingredient.product, { cascade: true })
   ingredients: IngredientsEntity[];
 
   @CreateDateColumn()

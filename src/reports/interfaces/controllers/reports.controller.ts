@@ -18,7 +18,7 @@ export class ReportsController {
    * Agrupa por período: daily, weekly, monthly
    */
   @Get('sales')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Reporte de ventas',
     description:
@@ -59,7 +59,7 @@ export class ReportsController {
    * Muestra la cantidad de órdenes por estado
    */
   @Get('order-status')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Reporte de estados de órdenes',
     description: 'Retorna la cantidad de órdenes agrupadas por estado',
@@ -85,7 +85,7 @@ export class ReportsController {
    * Muestra productos más vendidos y su desempeño
    */
   @Get('product-performance')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Reporte de rendimiento de productos',
     description: 'Retorna datos de productos más vendidos, ingresos generados y otros indicadores',
@@ -112,5 +112,33 @@ export class ReportsController {
   })
   getProductPerformance(@Query() filters: ReportFiltersDto) {
     return this.reportsUseCase.getProductPerformance(filters);
+  }
+
+  /**
+   * Resumen de métricas (totalVentas, totalPedidos, totalDomicilios, ticketPromedio)
+   * Compatible con query: ?periodo=today|7d|30d&branchId=uuid
+   */
+  @Get('summary')
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
+  @ApiOperation({ summary: 'Resumen de métricas del período' })
+  @ApiResponse({ status: 200, description: 'Resumen generado' })
+  getSummary(
+    @Query('periodo') periodo: string = '7d',
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.reportsUseCase.getSummary(periodo, branchId);
+  }
+
+  /**
+   * Ventas diarias — acepta periodo=today|7d|30d además de los filtros estándar
+   */
+  @Get('ventas-diarias')
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
+  @ApiOperation({ summary: 'Ventas agrupadas por día' })
+  getVentasDiarias(
+    @Query('periodo') periodo: string = '7d',
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.reportsUseCase.getVentasDiarias(periodo, branchId);
   }
 }

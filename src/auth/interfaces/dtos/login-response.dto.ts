@@ -1,5 +1,10 @@
-import { UserEntity } from 'src/auth/domain/entities/user.entity';
 export interface LoginResponse {
-  user: UserEntity;
-  token: string;
+  accessToken: string;
+  user: {
+    id: string;
+    nombre: string;
+    email: string;
+    rol: string;
+    sedeId: string | null;
+  };
 }

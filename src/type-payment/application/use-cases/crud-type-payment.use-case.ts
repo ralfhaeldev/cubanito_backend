@@ -4,7 +4,7 @@ import { TypePaymenEntity } from 'src/type-payment/domain/entities/type-paymen.e
 import { TypePaymentRepository } from 'src/type-payment/domain/repository.interface';
 
 @Injectable()
-export class CrudTypePaymenUseCase {
+export class CrudTypePaymentUseCase {
   constructor(
     private readonly typePaymentRepository: TypePaymentRepository<TypePaymenEntity>,
   ) {}

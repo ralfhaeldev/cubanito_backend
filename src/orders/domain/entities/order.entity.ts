@@ -1,24 +1,12 @@
 import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  OneToMany,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
+  Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany,
+  JoinColumn, CreateDateColumn, UpdateDateColumn, Index,
 } from 'typeorm';
 import { OrderStatus, OrderType } from 'src/common/enums/order-status.enum';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
 import { UserEntity } from 'src/auth/domain/entities/user.entity';
 import { OrderItemEntity } from './order-item.entity';
 
-/**
- * Entity que representa un pedido en el sistema
- * Gestiona el flujo completo: Pendiente → En Proceso → Preparado → [Enviado] → Entregado → Finalizado
- * Rastrea qué usuario cambió el estado del pedido
- */
 @Entity('orders')
 @Index(['branchId', 'status'])
 @Index(['createdAt'])
@@ -26,10 +14,10 @@ export class OrderEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('uuid')
-  branchId: string;
+  @Column('uuid', { nullable: true })
+  branchId: string | null;
 
-  @ManyToOne(() => BranchEntity, { onDelete: 'CASCADE' })
+  @ManyToOne(() => BranchEntity, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'branchId' })
   branch: BranchEntity;
 
@@ -39,22 +27,22 @@ export class OrderEntity {
   @Column('enum', { enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 
-  @Column('uuid')
-  createdByUserId: string;
+  @Column('uuid', { nullable: true })
+  createdByUserId: string | null;
 
   @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'createdByUserId' })
   createdByUser: UserEntity;
 
   @Column('uuid', { nullable: true })
-  lastStatusChangedByUserId: string;
+  lastStatusChangedByUserId: string | null;
 
   @ManyToOne(() => UserEntity, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'lastStatusChangedByUserId' })
   lastStatusChangedByUser: UserEntity;
 
   @Column('text', { nullable: true })
-  notes: string;
+  notes: string | null;
 
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   totalAmount: number;
@@ -64,6 +52,16 @@ export class OrderEntity {
 
   @Column('decimal', { precision: 10, scale: 2, default: 0 })
   realMargin: number;
+
+  /** Cliente domicilio — only for type === 'domicilio' */
+  @Column('text', { nullable: true })
+  clienteNombre: string | null;
+
+  @Column('text', { nullable: true })
+  clienteTelefono: string | null;
+
+  @Column('text', { nullable: true })
+  clienteDireccion: string | null;
 
   @OneToMany(() => OrderItemEntity, (item) => item.order, { cascade: true })
   items: OrderItemEntity[];
@@ -75,5 +73,5 @@ export class OrderEntity {
   updatedAt: Date;
 
   @Column('timestamp', { nullable: true })
-  completedAt: Date;
+  completedAt: Date | null;
 }

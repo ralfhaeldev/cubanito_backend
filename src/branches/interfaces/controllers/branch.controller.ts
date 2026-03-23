@@ -29,7 +29,7 @@ export class BranchController {
    * Solo ADMIN y SUPER_ADMIN
    */
   @Post()
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Crear sede',
     description: 'Crea una nueva sede/sucursal del restaurante',
@@ -89,7 +89,7 @@ export class BranchController {
    * Solo ADMIN y SUPER_ADMIN
    */
   @Patch(':id')
-  @Auth(Role.ADMIN, Role.SUPER_ADMIN)
+  @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Actualizar sede',
     description: 'Actualiza los datos de una sede',
@@ -118,7 +118,7 @@ export class BranchController {
    * Solo SUPER_ADMIN
    */
   @Delete(':id')
-  @Auth(Role.SUPER_ADMIN)
+  @Auth(Role.SUPER_ADMIN, Role.OWNER)
   @ApiOperation({
     summary: 'Eliminar sede',
     description: 'Elimina una sede del sistema',

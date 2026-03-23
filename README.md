@@ -21,3 +21,11 @@ docker-compose up -d
 ```
 ./generate-module.sh name-module
 ```
+
+
+ Usuarios disponibles (password: 1234):
+   superadmin@test.com  → SUPER_ADMIN (sin sede)
+   admin@sede1.com      → ADMIN       (Sede Centro)
+   mesero@sede1.com     → MESERO      (Sede Centro)
+   cocina@sede1.com     → COCINA      (Sede Centro)
+   domiciliario@sede1.com → DOMICILIARIO (Sede Centro)

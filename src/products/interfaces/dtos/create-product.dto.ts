@@ -1,52 +1,61 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, MinLength, IsNumber, IsEnum, IsUUID, IsOptional, Min } from 'class-validator';
-import { ProductType, ProductStatus } from 'src/common/enums/product-status.enum';
+import { Type } from 'class-transformer';
+import { IsString, IsNumber, IsEnum, IsUUID, IsOptional, IsBoolean, IsArray, ValidateNested, Min } from 'class-validator';
+import { ProductType } from 'src/common/enums/product-status.enum';
 
-export class CreateProductDto {
-  @IsString()
-  @MinLength(1)
-  @ApiProperty({
-    description: 'Product title/name',
-    example: 'Cubanito Clásico',
-  })
-  title: string;
+export class CreateIngredienteDto {
+  @IsUUID()
+  itemInventarioId: string;
 
   @IsString()
-  @ApiProperty({
-    description: 'Product description',
-    example: 'Pan con relleno y salsas',
-  })
-  description: string;
+  itemNombre: string;
 
   @IsNumber()
   @Min(0)
-  @ApiProperty({
-    description: 'Selling price',
-    example: 6.50,
-  })
-  sellingPrice: number;
+  cantidad: number;
+
+  @IsString()
+  unidad: string;
+}
+
+export class CreateProductDto {
+  @IsString()
+  @ApiProperty({ example: 'Cubanito Clásico' })
+  nombre: string;
 
   @IsEnum(ProductType)
-  @ApiProperty({
-    description: 'Product type: simple or preparado (recipe)',
-    enum: ProductType,
-    example: ProductType.SIMPLE,
-  })
-  type: ProductType;
+  @ApiProperty({ enum: ProductType, example: ProductType.PREPARADO })
+  tipo: ProductType;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty({ example: 6000 })
+  precioVenta: number;
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty({ example: 2400 })
+  precioCompra: number;
 
   @IsOptional()
-  @IsEnum(ProductStatus)
-  @ApiProperty({
-    description: 'Product status (default: ACTIVE)',
-    enum: ProductStatus,
-    example: ProductStatus.ACTIVE,
-  })
-  status?: ProductStatus;
+  @IsBoolean()
+  @ApiProperty({ required: false, default: true })
+  activo?: boolean;
 
+  @IsOptional()
   @IsUUID()
-  @ApiProperty({
-    description: 'Branch ID where product belongs',
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-  })
-  branchId: string;
+  @ApiProperty({ required: false })
+  itemInventarioId?: string;
+
+  @IsOptional()
+  @IsUUID()
+  @ApiProperty({ required: false })
+  branchId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateIngredienteDto)
+  @ApiProperty({ required: false, type: [CreateIngredienteDto] })
+  ingredientes?: CreateIngredienteDto[];
 }

@@ -14,11 +14,11 @@ export class LoginUserDto {
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @MinLength(2)
   @ApiProperty({
     description: 'Contraseña del usuario',
     example: 'Password123',
-    minLength: 6,
+    minLength: 2,
   })
   password: string;
 }

@@ -2,12 +2,12 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from 'class-validator';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { TypePaymenEntity } from 'src/type-payment/domain/entities/type-paymen.entity';
+import { TypePaymentEntity } from 'src/type-payment/domain/entities/type-payment.entity';
 import { TypePaymentRepository } from 'src/type-payment/domain/repository.interface';
 import { ILike, Repository } from 'typeorm';
 
 @Injectable()
-export class TypeormTypePaymenRepository
+export class TypeormTypePaymentRepository
   implements TypePaymentRepository<TypePaymenEntity>
 {
   constructor(

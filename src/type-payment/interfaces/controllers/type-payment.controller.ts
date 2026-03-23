@@ -1,10 +1,10 @@
 import { Controller, Get, Param, Query } from '@nestjs/common';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { CrudTypePaymenUseCase } from 'src/type-payment/application/use-cases/crud-type-paymen.use-case';
+import { CrudTypePaymentUseCase } from 'src/type-payment/application/use-cases/crud-type-payment.use-case';
 
 @Controller('type-payment')
-export class TypePaymenController {
-  constructor(private readonly curdTypePayment: CrudTypePaymenUseCase) {}
+export class TypePaymentController {
+  constructor(private readonly curdTypePayment: CrudTypePaymentUseCase) {}
   @Get()
   findAll(@Query() paginationDto: PaginationDto) {
     return this.curdTypePayment.findAll(paginationDto);

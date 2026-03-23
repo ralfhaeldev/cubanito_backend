@@ -2,10 +2,6 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, CreateDa
 import { OrderEntity } from './order.entity';
 import { ProductEntity } from 'src/products/domain/entities/product.entity';
 
-/**
- * Entity que representa un producto dentro de un pedido
- * Almacena la información del producto al momento del pedido (historial de precios)
- */
 @Entity('order_items')
 export class OrderItemEntity {
   @PrimaryGeneratedColumn('uuid')
@@ -24,6 +20,10 @@ export class OrderItemEntity {
   @ManyToOne(() => ProductEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'productId' })
   product: ProductEntity;
+
+  /** Denormalized product name at time of order */
+  @Column('text', { nullable: true })
+  productoNombre: string | null;
 
   @Column('int')
   quantity: number;

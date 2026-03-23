@@ -12,69 +12,87 @@ export class CrudBranchUseCase {
     private readonly branchRepository: Repository<BranchEntity>,
   ) {}
 
-  async create(createBranchDto: CreateBranchDto): Promise<BranchEntity> {
+  async create(createBranchDto: CreateBranchDto): Promise<any> {
     const existingBranch = await this.branchRepository.findOne({
-      where: { name: createBranchDto.name },
+      where: { name: createBranchDto.nombre },
     });
 
     if (existingBranch) {
-      throw new ConflictException(`Branch with name ${createBranchDto.name} already exists`);
+      throw new ConflictException(`Sede con nombre ${createBranchDto.nombre} ya existe`);
     }
 
     const branch = this.branchRepository.create({
-      name: createBranchDto.name,
+      name: createBranchDto.nombre,
+      isActive: createBranchDto.activa !== false,
       address: createBranchDto.address,
       phone: createBranchDto.phone,
     });
 
-    return this.branchRepository.save(branch);
+    const saved = await this.branchRepository.save(branch);
+    return this.mapBranch(saved);
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<BranchEntity[]> {
+  async findAll(paginationDto: PaginationDto): Promise<any[]> {
     const { limit = 10, offset = 0 } = paginationDto;
 
-    return this.branchRepository.find({
+    const branches = await this.branchRepository.find({
       take: limit,
       skip: offset,
       order: { createdAt: 'DESC' },
     });
+    return branches.map(this.mapBranch);
   }
 
-  async findOne(id: string): Promise<BranchEntity> {
+  async findOne(id: string): Promise<any> {
     const branch = await this.branchRepository.findOne({
       where: { id },
-      relations: ['products', 'inventories', 'orders'],
     });
 
     if (!branch) {
-      throw new NotFoundException(`Branch with id ${id} not found`);
+      throw new NotFoundException(`Sede con id ${id} no encontrada`);
     }
 
-    return branch;
+    return this.mapBranch(branch);
   }
 
-  async update(id: string, updateBranchDto: UpdateBranchDto): Promise<BranchEntity> {
-    const branch = await this.findOne(id);
+  async update(id: string, updateBranchDto: UpdateBranchDto): Promise<any> {
+    const branch = await this.branchRepository.findOne({ where: { id } });
+    if (!branch) throw new NotFoundException(`Sede con id ${id} no encontrada`);
 
-    if (updateBranchDto.name && updateBranchDto.name !== branch.name) {
+    if (updateBranchDto.nombre && updateBranchDto.nombre !== branch.name) {
       const existingBranch = await this.branchRepository.findOne({
-        where: { name: updateBranchDto.name },
+        where: { name: updateBranchDto.nombre },
       });
 
       if (existingBranch) {
         throw new ConflictException(
-          `Branch with name ${updateBranchDto.name} already exists`,
+          `Sede con nombre ${updateBranchDto.nombre} ya existe`,
         );
       }
+      branch.name = updateBranchDto.nombre;
     }
 
-    Object.assign(branch, updateBranchDto);
+    if (updateBranchDto.activa !== undefined) branch.isActive = updateBranchDto.activa;
+    if (updateBranchDto.address !== undefined) branch.address = updateBranchDto.address;
+    if (updateBranchDto.phone !== undefined) branch.phone = updateBranchDto.phone;
 
-    return this.branchRepository.save(branch);
+    const saved = await this.branchRepository.save(branch);
+    return this.mapBranch(saved);
   }
 
   async delete(id: string): Promise<void> {
-    const branch = await this.findOne(id);
+    const branch = await this.branchRepository.findOne({ where: { id } });
+    if (!branch) throw new NotFoundException(`Sede con id ${id} no encontrada`);
     await this.branchRepository.remove(branch);
+  }
+
+  private mapBranch(b: BranchEntity): any {
+    return {
+      id: b.id,
+      nombre: b.name,
+      activa: b.isActive,
+      address: b.address,
+      phone: b.phone,
+    };
   }
 }

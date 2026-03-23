@@ -13,6 +13,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { OrdersModule } from './orders/orders.module';
 import { ReportsModule } from './reports/reports.module';
+import { CajaModule } from './caja/caja.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ReportsModule } from './reports/reports.module';
     IngredientsModule,
     OrdersModule,
     ReportsModule,
+    CajaModule,
   ],
   controllers: [],
   providers: [],

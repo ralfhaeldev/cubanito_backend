@@ -3,9 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { OrderEntity } from 'src/orders/domain/entities/order.entity';
 import { OrderItemEntity } from 'src/orders/domain/entities/order-item.entity';
-import { OrderStatus } from 'src/common/enums/order-status.enum';
+import { OrderStatus, OrderType } from 'src/common/enums/order-status.enum';
 import { ReportFiltersDto, ReportPeriod, SalesReportDto } from '../../interfaces/dtos/report.dto';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
+import { CajaEntity } from 'src/caja/domain/entities/caja.entity';
 
 @Injectable()
 export class ReportsUseCase {
@@ -16,6 +17,8 @@ export class ReportsUseCase {
     private readonly orderItemRepository: Repository<OrderItemEntity>,
     @InjectRepository(BranchEntity)
     private readonly branchRepository: Repository<BranchEntity>,
+    @InjectRepository(CajaEntity)
+    private readonly cajaRepository: Repository<CajaEntity>,
   ) {}
 
   async getSalesReport(filters: ReportFiltersDto): Promise<SalesReportDto> {
@@ -150,6 +153,116 @@ export class ReportsUseCase {
     }
 
     return Object.values(productStats);
+  }
+
+  /**
+   * Resumen de métricas para el dashboard.
+   * Compatible con los parámetros del mock: periodo=today|7d|30d
+   */
+  async getSummary(periodo: string, branchId?: string): Promise<any> {
+    const { start, end } = this.calculateDateRangeFromPeriodo(periodo);
+
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.FINALIZADO,
+        createdAt: Between(start, end),
+        ...(branchId ? { branchId } : {}),
+      },
+    });
+
+    const deliveryOrders = orders.filter((o) => o.type === OrderType.DOMICILIO);
+    const totalVentas = orders.reduce((s, o) => s + Number(o.totalAmount), 0);
+    const totalPedidos = orders.length;
+    const totalDomicilios = deliveryOrders.length;
+    const ticketPromedio = totalPedidos > 0 ? Math.round(totalVentas / totalPedidos) : 0;
+
+    return { totalVentas, totalPedidos, totalDomicilios, ticketPromedio };
+  }
+
+  /**
+   * Reporte de ventas diarias. Acepta periodo=today|7d|30d o period=daily|weekly|monthly
+   */
+  async getVentasDiarias(periodo: string, branchId?: string): Promise<any[]> {
+    const { start, end } = this.calculateDateRangeFromPeriodo(periodo);
+
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.FINALIZADO,
+        createdAt: Between(start, end),
+        ...(branchId ? { branchId } : {}),
+      },
+    });
+
+    // Agrupar por fecha
+    const byDate: Record<string, { ventas: number; pedidos: number; domicilios: number }> = {};
+    for (const order of orders) {
+      const date = order.createdAt.toISOString().split('T')[0];
+      if (!byDate[date]) byDate[date] = { ventas: 0, pedidos: 0, domicilios: 0 };
+      byDate[date].ventas += Number(order.totalAmount);
+      byDate[date].pedidos += 1;
+      if (order.type === OrderType.DOMICILIO) byDate[date].domicilios += 1;
+    }
+
+    return Object.entries(byDate)
+      .map(([fecha, data]) => ({ fecha, ...data }))
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  }
+
+  /** Historial de cajas para reportes */
+  async getCajaHistorial(branchId?: string): Promise<any[]> {
+    const where: any = {};
+    if (branchId) where.branchId = branchId;
+
+    const cajas = await this.cajaRepository.find({
+      where,
+      order: { createdAt: 'DESC' },
+      take: 30,
+      relations: ['movimientos'],
+    });
+
+    return cajas.map((c) => {
+      const ingresos = c.movimientos
+        ?.filter((m) => m.tipo === 'ingreso')
+        .reduce((s, m) => s + Number(m.monto), 0) ?? 0;
+      const egresos = c.movimientos
+        ?.filter((m) => m.tipo !== 'ingreso')
+        .reduce((s, m) => s + Number(m.monto), 0) ?? 0;
+      return {
+        id: c.id,
+        fecha: c.fecha,
+        montoInicial: Number(c.montoInicial),
+        montoFinal: c.montoFinal !== null ? Number(c.montoFinal) : null,
+        ingresos,
+        egresos,
+        abierta: c.abierta,
+        abiertaPor: c.abiertaPor,
+      };
+    });
+  }
+
+  private calculateDateRangeFromPeriodo(periodo: string): { start: Date; end: Date } {
+    const now = new Date();
+    const end = new Date(now);
+    end.setHours(23, 59, 59, 999);
+
+    if (periodo === 'today') {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      return { start, end };
+    }
+
+    if (periodo === '30d') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 29);
+      start.setHours(0, 0, 0, 0);
+      return { start, end };
+    }
+
+    // default: 7d
+    const start = new Date(now);
+    start.setDate(now.getDate() - 6);
+    start.setHours(0, 0, 0, 0);
+    return { start, end };
   }
 
   private calculateDateRange(

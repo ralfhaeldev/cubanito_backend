@@ -21,8 +21,29 @@ export class InventoryEntity {
   @Column('decimal', { precision: 10, scale: 2 })
   quantity: number;
 
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  minQuantity: number;
+
+  @Column('decimal', { precision: 10, scale: 2, default: 0 })
+  idealQuantity: number;
+
   @Column('decimal', { precision: 10, scale: 2 })
   purchasePrice: number;
+
+  /** Unidad de medida: kg, g, und, lt, ml */
+  @Column('text', { default: 'und' })
+  unit: string;
+
+  /** Categoría del ítem (Panadería, Carnes, Lácteos, etc.) */
+  @Column('text', { nullable: true })
+  category: string;
+
+  @Column('bool', { default: true })
+  isActive: boolean;
+
+  /** Fecha del último ajuste de inventario */
+  @Column('timestamp', { nullable: true })
+  lastAdjustedAt: Date | null;
 
   @Column('uuid', { nullable: true })
   branchId: string;

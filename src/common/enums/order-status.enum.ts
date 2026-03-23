@@ -1,7 +1,6 @@
 export enum OrderStatus {
-  PENDING = 'pending',
-  EN_PROCESO = 'en-proceso',
-  PREPARADO = 'preparado',
+  PENDING = 'pendiente',
+  EN_PROCESO = 'en_proceso',
   ENVIADO = 'enviado',
   ENTREGADO = 'entregado',
   RECHAZADO = 'rechazado',
@@ -10,11 +9,10 @@ export enum OrderStatus {
 
 export enum OrderType {
   LOCAL = 'local',
-  DELIVERY = 'delivery',
+  DOMICILIO = 'domicilio',
 }
 
-export enum PaymentStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
+export enum PaymentMethod {
+  EFECTIVO = 'efectivo',
+  TRANSFERENCIA = 'transferencia',
 }

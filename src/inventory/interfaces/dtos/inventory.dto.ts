@@ -1,88 +1,82 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsBoolean, IsUUID, IsEnum, Min } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 
 export class CreateInventoryDto {
   @IsString()
-  @ApiProperty({
-    description: 'Nombre del artículo de inventario',
-    example: 'Pan de cubanito',
-  })
-  name: string;
+  @ApiProperty({ example: 'Pan de hamburguesa' })
+  nombre: string;
 
-  @IsString()
   @IsOptional()
-  @ApiProperty({
-    description: 'Descripción del artículo',
-    example: 'Pan fresco para cubanitos',
-    required: false,
-  })
+  @IsString()
   description?: string;
 
   @IsNumber()
   @Min(0)
-  @ApiProperty({
-    description: 'Cantidad disponible en el inventario',
-    example: 100,
-  })
-  quantity: number;
+  @ApiProperty({ example: 100 })
+  stockActual: number;
 
-  @IsNumber()
-  @Min(0.01)
-  @ApiProperty({
-    description: 'Precio de compra unitario',
-    example: 0.5,
-  })
-  purchasePrice: number;
-
-  @IsUUID()
-  @ApiProperty({
-    description: 'UUID de la sede (sucursal)',
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-  })
-  branchId: string;
-}
-
-export class UpdateInventoryDto {
-  @IsString()
   @IsOptional()
-  @ApiProperty({
-    description: 'Nombre del artículo',
-    required: false,
-  })
-  name?: string;
-
-  @IsString()
-  @IsOptional()
-  @ApiProperty({
-    description: 'Descripción del artículo',
-    required: false,
-  })
-  description?: string;
-
   @IsNumber()
   @Min(0)
-  @IsOptional()
-  @ApiProperty({
-    description: 'Cantidad disponible',
-    required: false,
-  })
-  quantity?: number;
+  @ApiProperty({ required: false, example: 20 })
+  stockMinimo?: number;
 
-  @IsNumber()
-  @Min(0.01)
   @IsOptional()
-  @ApiProperty({
-    description: 'Precio de compra unitario',
-    required: false,
-  })
+  @IsNumber()
+  @Min(0)
+  @ApiProperty({ required: false, example: 150 })
+  stockIdeal?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @ApiProperty({ required: false, default: 0 })
   purchasePrice?: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, default: 'und' })
+  unidad?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  categoria?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiProperty({ required: false, default: true })
+  activo?: boolean;
+
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
 }
+
+export class UpdateInventoryDto extends PartialType(CreateInventoryDto) {}
 
 export class AdjustInventoryDto {
   @IsNumber()
-  @ApiProperty({
-    description: 'Cantidad a ajustar (positivo suma, negativo resta)',
-    example: -5,
-  })
+  @ApiProperty({ description: 'Positive to add, negative to subtract', example: -5 })
   adjustment: number;
+}
+
+export class CreateAdjustmentDto {
+  @IsUUID()
+  @ApiProperty()
+  itemId: string;
+
+  @IsEnum(['entrada', 'salida', 'ajuste'])
+  @ApiProperty({ enum: ['entrada', 'salida', 'ajuste'] })
+  tipo: 'entrada' | 'salida' | 'ajuste';
+
+  @IsNumber()
+  @Min(0)
+  @ApiProperty()
+  cantidad: number;
+
+  @IsString()
+  @ApiProperty()
+  motivo: string;
 }

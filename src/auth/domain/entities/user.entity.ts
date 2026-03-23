@@ -13,25 +13,24 @@ export class UserEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('text', {
-    unique: true,
-  })
+  @Column('text', { unique: true })
   email: string;
 
   @Exclude()
   @Column('text', { select: false })
-  pawssowrd: string;
+  password: string;
 
   @Column('text')
   fullName: string;
 
-  @Column('bool', {
-    default: true,
-  })
+  @Column('bool', { default: true })
   isActive: boolean;
 
-  @Column('text', { array: true, default: [Role.USER] })
-  roles: Role[];
+  @Column({ type: 'varchar', length: 50, default: Role.MESERO })
+  rol: Role;
+
+  @Column('uuid', { nullable: true })
+  branchId: string | null;
 
   @BeforeInsert()
   checkFieldInsert() {
@@ -41,13 +40,5 @@ export class UserEntity {
   @BeforeUpdate()
   checkFieldUpdate() {
     this.checkFieldInsert();
-  }
-
-  json() {
-    return {
-      id: this.id,
-      fullName: this.fullName,
-      roles: this.roles,
-    };
   }
 }

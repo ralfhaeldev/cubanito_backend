@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderEntity } from '../../domain/entities/order.entity';
@@ -35,271 +30,176 @@ export class CrudOrderUseCase {
     private readonly ingredientsRepository: Repository<IngredientsEntity>,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto, userId: string): Promise<OrderEntity> {
-    const branch = await this.branchRepository.findOne({
-      where: { id: createOrderDto.branchId },
-    });
-
-    if (!branch) {
-      throw new NotFoundException(
-        `Branch with id ${createOrderDto.branchId} not found`,
-      );
-    }
+  async create(createOrderDto: CreateOrderDto, userId: string, userBranchId?: string): Promise<any> {
+    const branchId = createOrderDto.branchId ?? userBranchId;
 
     let totalAmount = 0;
-
-    // Validar productos y calcular total
     for (const item of createOrderDto.items) {
-      const product = await this.productRepository.findOne({
-        where: { id: item.productId },
-      });
-
-      if (!product) {
-        throw new NotFoundException(
-          `Product with id ${item.productId} not found`,
-        );
-      }
-
-      totalAmount += item.unitPrice * item.quantity;
+      totalAmount += (item.precioUnitario ?? 0) * item.cantidad;
     }
 
     const order = this.orderRepository.create({
-      branchId: createOrderDto.branchId,
-      type: createOrderDto.type,
+      branchId: branchId ?? null,
+      type: createOrderDto.tipo,
       status: OrderStatus.PENDING,
       createdByUserId: userId,
-      notes: createOrderDto.notes,
+      notes: createOrderDto.notes ?? null,
       totalAmount,
-      realCost: 0,
-      realMargin: 0,
+      clienteNombre: createOrderDto.clienteDomicilio?.nombre ?? null,
+      clienteTelefono: createOrderDto.clienteDomicilio?.telefono ?? null,
+      clienteDireccion: createOrderDto.clienteDomicilio?.direccion ?? null,
     });
 
     const savedOrder = await this.orderRepository.save(order);
 
-    // Crear items del pedido
     for (const item of createOrderDto.items) {
+      const product = item.productoId
+        ? await this.productRepository.findOne({ where: { id: item.productoId } })
+        : null;
+
       const orderItem = this.orderItemRepository.create({
         orderId: savedOrder.id,
-        productId: item.productId,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        realCost: 0,
+        productId: item.productoId,
+        productoNombre: item.productoNombre ?? product?.title ?? '',
+        quantity: item.cantidad,
+        unitPrice: item.precioUnitario,
       });
-
       await this.orderItemRepository.save(orderItem);
     }
 
     return this.findOne(savedOrder.id);
   }
 
-  async findAll(
-    paginationDto: PaginationDto,
-    branchId?: string,
-  ): Promise<OrderEntity[]> {
-    const { limit = 10, offset = 0 } = paginationDto;
+  async findActive(branchId?: string): Promise<any[]> {
+    const inactiveStatuses = [OrderStatus.FINALIZADO, OrderStatus.RECHAZADO];
+    const orders = await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.items', 'items')
+      .leftJoinAndSelect('order.createdByUser', 'createdByUser')
+      .where('order.status NOT IN (:...statuses)', { statuses: inactiveStatuses })
+      .andWhere(branchId ? 'order.branchId = :branchId' : '1=1', branchId ? { branchId } : {})
+      .orderBy('order.createdAt', 'DESC')
+      .getMany();
+    return orders.map(this.mapOrder);
+  }
 
-    return this.orderRepository.find({
+  async findAll(paginationDto: PaginationDto, branchId?: string): Promise<any[]> {
+    const { limit = 50, offset = 0 } = paginationDto;
+    const orders = await this.orderRepository.find({
       where: branchId ? { branchId } : {},
-      relations: ['items', 'items.product', 'branch', 'createdByUser'],
-      take: limit,
-      skip: offset,
+      relations: ['items', 'createdByUser'],
+      take: limit, skip: offset,
       order: { createdAt: 'DESC' },
     });
+    return orders.map(this.mapOrder);
   }
 
-  async findOne(id: string): Promise<OrderEntity> {
+  async findOne(id: string): Promise<any> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['items', 'items.product', 'branch', 'createdByUser', 'lastStatusChangedByUser'],
+      relations: ['items', 'createdByUser'],
     });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
-
-    return order;
+    if (!order) throw new NotFoundException(`Pedido con id ${id} no encontrado`);
+    return this.mapOrder(order);
   }
 
-  async updateStatus(
-    id: string,
-    updateOrderStatusDto: UpdateOrderStatusDto,
-    userId: string,
-    userRoles: Role[],
-  ): Promise<OrderEntity> {
-    const order = await this.findOne(id);
+  async updateStatus(id: string, dto: UpdateOrderStatusDto, userId: string, userRol: Role): Promise<any> {
+    const order = await this.orderRepository.findOne({ where: { id }, relations: ['items'] });
+    if (!order) throw new NotFoundException(`Pedido con id ${id} no encontrado`);
 
-    // Validar transiciones de estado permitidas según el rol
-    this.validateStatusTransition(order.status, updateOrderStatusDto.status, userRoles);
+    this.validateStatusTransition(order.status, dto.estado, userRol);
 
-    const previousStatus = order.status;
-
-    // Si cambiar a FINALIZADO, aplicar lógica de descuento de inventario
-    if (updateOrderStatusDto.status === OrderStatus.FINALIZADO && previousStatus !== OrderStatus.FINALIZADO) {
+    if (dto.estado === OrderStatus.FINALIZADO && order.status !== OrderStatus.FINALIZADO) {
       await this.applyInventoryDeduction(order);
     }
 
-    order.status = updateOrderStatusDto.status;
+    order.status = dto.estado;
     order.lastStatusChangedByUserId = userId;
+    if (dto.notes) order.notes = dto.notes;
+    if (dto.estado === OrderStatus.FINALIZADO) order.completedAt = new Date();
 
-    if (updateOrderStatusDto.notes) {
-      order.notes = updateOrderStatusDto.notes;
-    }
-
-    if (updateOrderStatusDto.status === OrderStatus.FINALIZADO) {
-      order.completedAt = new Date();
-    }
-
-    return this.orderRepository.save(order);
+    const saved = await this.orderRepository.save(order);
+    return this.mapOrder(saved);
   }
 
-  /**
-   * Aplicar lógica de descuento de inventario al finalizar un pedido
-   * Simple: descuenta 1 unidad del ítem × cantidad pedida
-   * Preparado: descuenta cada ingrediente × cantidad pedida
-   */
-  private async applyInventoryDeduction(order: OrderEntity): Promise<void> {
-    let totalRealCost = 0;
+  async finalizar(id: string, userId: string, userRol: Role): Promise<{ success: boolean }> {
+    await this.updateStatus(id, { estado: OrderStatus.FINALIZADO }, userId, userRol);
+    return { success: true };
+  }
 
+  private async applyInventoryDeduction(order: OrderEntity): Promise<void> {
     for (const item of order.items) {
       const product = await this.productRepository.findOne({
         where: { id: item.productId },
         relations: ['ingredients', 'ingredients.inventoryItem'],
       });
+      if (!product) continue;
 
-      if (!product) {
-        throw new NotFoundException(`Product with id ${item.productId} not found`);
-      }
-
-      if (product.type === ProductType.SIMPLE) {
-        // Para productos simples: buscar el insumo en inventario
-        const inventoryItem = await this.inventoryRepository.findOne({
-          where: { name: product.title, branchId: order.branchId },
-        });
-
-        if (inventoryItem) {
-          // Descontar del inventario
-          const adjustment = -item.quantity;
-          if (inventoryItem.quantity + adjustment < 0) {
-            throw new BadRequestException(
-              `Insufficient inventory for product ${product.title}`,
-            );
-          }
-
-          inventoryItem.quantity += adjustment;
-          await this.inventoryRepository.save(inventoryItem);
-
-          // Calcular costo real
-          const itemRealCost = item.quantity * inventoryItem.purchasePrice;
-          item.realCost = itemRealCost;
-          totalRealCost += itemRealCost;
+      if (product.type === ProductType.SIMPLE && product.itemInventarioId) {
+        const inv = await this.inventoryRepository.findOne({ where: { id: product.itemInventarioId } });
+        if (inv) {
+          inv.quantity = Math.max(0, Number(inv.quantity) - item.quantity);
+          await this.inventoryRepository.save(inv);
         }
-      } else if (product.type === ProductType.PREPARADO && product.ingredients) {
-        // Para productos preparados: descontar cada ingrediente
-        for (const ingredient of product.ingredients) {
-          const inventoryItem = ingredient.inventoryItem || (await this.inventoryRepository.findOne({
-            where: { id: ingredient.inventoryItemId },
-          }));
-
-          if (inventoryItem) {
-            // Descontar cantidad: ingrediente.quantity × item.quantity
-            const totalDeduction = ingredient.quantity * item.quantity;
-            const adjustment = -totalDeduction;
-
-            if (inventoryItem.quantity + adjustment < 0) {
-              throw new BadRequestException(
-                `Insufficient inventory for ingredient in product ${product.title}`,
-              );
-            }
-
-            inventoryItem.quantity += adjustment;
-            await this.inventoryRepository.save(inventoryItem);
-
-            // Sumar al costo real
-            const ingredientCost = totalDeduction * inventoryItem.purchasePrice;
-            totalRealCost += ingredientCost;
+      } else if (product.type === ProductType.PREPARADO && product.ingredients?.length) {
+        for (const ing of product.ingredients) {
+          const inv = ing.inventoryItem ?? await this.inventoryRepository.findOne({ where: { id: ing.inventoryItemId } });
+          if (inv) {
+            const deduction = Number(ing.quantity) * item.quantity;
+            inv.quantity = Math.max(0, Number(inv.quantity) - deduction);
+            await this.inventoryRepository.save(inv);
           }
         }
-
-        item.realCost = totalRealCost;
       }
-
-      await this.orderItemRepository.save(item);
     }
-
-    // Calcular margen real
-    order.realCost = totalRealCost;
-    order.realMargin = order.totalAmount - totalRealCost;
   }
 
-  /**
-   * Validar transiciones de estado permitidas según el rol del usuario
-   */
-  private validateStatusTransition(
-    currentStatus: OrderStatus,
-    newStatus: OrderStatus,
-    userRoles: Role[],
-  ): void {
-    // MESERO: Solo puede cambiar a EN_PROCESO y PREPARADO
-    if (userRoles.includes(Role.MESERO)) {
-      if (![OrderStatus.EN_PROCESO, OrderStatus.PREPARADO].includes(newStatus)) {
-        throw new ForbiddenException(
-          'MESERO can only change order status to EN_PROCESO or PREPARADO',
-        );
-      }
-      if (currentStatus !== OrderStatus.PENDING && newStatus === OrderStatus.EN_PROCESO) {
-        throw new BadRequestException('Invalid status transition');
-      }
-      if (currentStatus !== OrderStatus.EN_PROCESO && newStatus === OrderStatus.PREPARADO) {
-        throw new BadRequestException('Invalid status transition');
+  private validateStatusTransition(current: OrderStatus, next: OrderStatus, rol: Role): void {
+    if (rol === Role.COCINA) {
+      if (next !== OrderStatus.EN_PROCESO) {
+        throw new ForbiddenException('Cocina solo puede cambiar estado a en_proceso');
       }
     }
-
-    // COCINA: Solo puede ver y cambiar a EN_PROCESO
-    if (userRoles.includes(Role.COCINA)) {
-      if (newStatus !== OrderStatus.EN_PROCESO) {
-        throw new ForbiddenException('COCINA can only change order status to EN_PROCESO');
+    if (rol === Role.DOMICILIARIO) {
+      if (![OrderStatus.ENTREGADO, OrderStatus.RECHAZADO].includes(next)) {
+        throw new ForbiddenException('Domiciliario solo puede cambiar estado a entregado o rechazado');
       }
-    }
-
-    // DOMICILIARIO: Solo puede cambiar a ENTREGADO o RECHAZADO
-    if (userRoles.includes(Role.DOMICILIARIO)) {
-      if (![OrderStatus.ENTREGADO, OrderStatus.RECHAZADO].includes(newStatus)) {
-        throw new ForbiddenException(
-          'DOMICILIARIO can only change order status to ENTREGADO or RECHAZADO',
-        );
-      }
-      if (currentStatus !== OrderStatus.ENVIADO) {
-        throw new BadRequestException('Order must be in ENVIADO status');
-      }
-    }
-
-    // ADMIN: Puede hacer transiciones normales
-    if (userRoles.includes(Role.ADMIN) || userRoles.includes(Role.SUPER_ADMIN)) {
-      // ADMIN puede pasar de PREPARADO a ENVIADO (solo delivery)
-      // ADMIN puede pasar a FINALIZADO
-      const validTransitions: { [key in OrderStatus]?: OrderStatus[] } = {
-        [OrderStatus.PENDING]: [OrderStatus.EN_PROCESO],
-        [OrderStatus.EN_PROCESO]: [OrderStatus.PREPARADO, OrderStatus.RECHAZADO],
-        [OrderStatus.PREPARADO]: [OrderStatus.ENVIADO, OrderStatus.ENTREGADO],
-        [OrderStatus.ENVIADO]: [OrderStatus.ENTREGADO],
-        [OrderStatus.ENTREGADO]: [OrderStatus.FINALIZADO],
-        [OrderStatus.RECHAZADO]: [],
-        [OrderStatus.FINALIZADO]: [],
-      };
-
-      if (!validTransitions[currentStatus]?.includes(newStatus)) {
-        throw new BadRequestException(`Invalid transition from ${currentStatus} to ${newStatus}`);
+      if (current !== OrderStatus.ENVIADO) {
+        throw new BadRequestException('El pedido debe estar en estado enviado');
       }
     }
   }
 
   async delete(id: string): Promise<void> {
-    const order = await this.findOne(id);
-
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) throw new NotFoundException(`Pedido con id ${id} no encontrado`);
     if (order.status !== OrderStatus.PENDING) {
-      throw new BadRequestException('Can only delete orders in PENDING status');
+      throw new BadRequestException('Solo se pueden eliminar pedidos en estado pendiente');
     }
-
     await this.orderRepository.remove(order);
+  }
+
+  private mapOrder(o: OrderEntity): any {
+    return {
+      id: o.id,
+      tipo: o.type,
+      estado: o.status,
+      total: Number(o.totalAmount),
+      meseroId: o.createdByUserId,
+      meseroNombre: (o.createdByUser as any)?.fullName ?? '',
+      clienteDomicilio: o.clienteNombre
+        ? { nombre: o.clienteNombre, telefono: o.clienteTelefono, direccion: o.clienteDireccion }
+        : undefined,
+      items: (o.items ?? []).map(item => ({
+        id: item.id,
+        productoId: item.productId,
+        productoNombre: item.productoNombre ?? (item.product as any)?.title ?? '',
+        cantidad: item.quantity,
+        precioUnitario: Number(item.unitPrice),
+        subtotal: item.quantity * Number(item.unitPrice),
+      })),
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    };
   }
 }

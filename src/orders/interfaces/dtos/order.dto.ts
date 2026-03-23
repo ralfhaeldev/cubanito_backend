@@ -5,79 +5,78 @@ import { Type } from 'class-transformer';
 
 export class CreateOrderItemDto {
   @IsUUID()
-  @ApiProperty({
-    description: 'UUID del producto',
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-  })
-  productId: string;
+  productoId: string;
+
+  @IsOptional()
+  @IsString()
+  productoNombre?: string;
 
   @IsNumber()
   @Min(1)
-  @ApiProperty({
-    description: 'Cantidad del producto en el pedido',
-    example: 2,
-  })
-  quantity: number;
+  cantidad: number;
 
   @IsNumber()
-  @Min(0.01)
-  @ApiProperty({
-    description: 'Precio unitario del producto al momento del pedido',
-    example: 3.5,
-  })
-  unitPrice: number;
+  @Min(0)
+  precioUnitario: number;
+
+  @IsOptional()
+  @IsNumber()
+  subtotal?: number;
+}
+
+export class ClienteDomicilioDto {
+  @IsString()
+  nombre: string;
+
+  @IsString()
+  telefono: string;
+
+  @IsString()
+  direccion: string;
 }
 
 export class CreateOrderDto {
-  @IsUUID()
-  @ApiProperty({
-    description: 'UUID de la sede/branch',
-    example: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-  })
-  branchId: string;
-
   @IsEnum(OrderType)
-  @ApiProperty({
-    description: 'Tipo de pedido: local o delivery',
-    enum: OrderType,
-    example: OrderType.LOCAL,
-  })
-  type: OrderType;
+  @ApiProperty({ enum: OrderType, example: OrderType.LOCAL })
+  tipo: OrderType;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateOrderItemDto)
-  @ApiProperty({
-    description: 'Array de items del pedido',
-    type: [CreateOrderItemDto],
-  })
   items: CreateOrderItemDto[];
 
-  @IsString()
   @IsOptional()
-  @ApiProperty({
-    description: 'Notas adicionales para el pedido',
-    example: 'Sin picante',
-    required: false,
-  })
+  @ValidateNested()
+  @Type(() => ClienteDomicilioDto)
+  clienteDomicilio?: ClienteDomicilioDto;
+
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
+  @IsOptional()
+  @IsString()
   notes?: string;
 }
 
 export class UpdateOrderStatusDto {
   @IsEnum(OrderStatus)
-  @ApiProperty({
-    description: 'Nuevo estado del pedido',
-    enum: OrderStatus,
-    example: OrderStatus.EN_PROCESO,
-  })
-  status: OrderStatus;
+  @ApiProperty({ enum: OrderStatus })
+  estado: OrderStatus;
 
-  @IsString()
   @IsOptional()
-  @ApiProperty({
-    description: 'Notas del cambio de estado',
-    example: 'Comenzó la preparación',
-    required: false,
-  })
+  @IsString()
   notes?: string;
+}
+
+export class FinalizarOrderDto {
+  @IsEnum(['efectivo', 'transferencia'])
+  metodo: string;
+
+  @IsNumber()
+  monto: number;
+
+  @IsOptional()
+  @IsNumber()
+  vuelto?: number;
 }
