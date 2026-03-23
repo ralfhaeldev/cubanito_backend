@@ -1,40 +1,40 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CajaEntity } from '../../domain/entities/caja.entity';
-import { MovimientoEntity } from '../../domain/entities/movimiento.entity';
-import { AbrirCajaDto, CerrarCajaDto, CreateMovimientoDto } from '../../interfaces/dtos/caja.dto';
+import { CashboxEntity } from '../../domain/entities/cashbox.entity';
+import { MovementEntity } from '../../domain/entities/movement.entity';
+import { OpenCashboxDto, CloseCashboxDto, CreateMovementDto } from '../../interfaces/dtos/cashbox.dto';
 
 @Injectable()
-export class CajaUseCase {
+export class CashboxUseCase {
   constructor(
-    @InjectRepository(CajaEntity)
-    private readonly cajaRepository: Repository<CajaEntity>,
-    @InjectRepository(MovimientoEntity)
-    private readonly movimientoRepository: Repository<MovimientoEntity>,
+    @InjectRepository(CashboxEntity)
+    private readonly cashboxRepository: Repository<CashboxEntity>,
+    @InjectRepository(MovementEntity)
+    private readonly movementRepository: Repository<MovementEntity>,
   ) {}
 
-  /** Obtiene la caja abierta actual (la más reciente abierta) */
-  async getCajaActual(branchId?: string): Promise<CajaEntity | null> {
+  /** Gets the current open cashbox (most recently opened) */
+  async getCurrentCashbox(branchId?: string): Promise<CashboxEntity | null> {
     const where: any = { abierta: true };
     if (branchId) where.branchId = branchId;
-    return this.cajaRepository.findOne({
+    return this.cashboxRepository.findOne({
       where,
       order: { createdAt: 'DESC' },
-      relations: ['movimientos'],
+      relations: ['movements'],
     });
   }
 
-  async abrirCaja(dto: AbrirCajaDto, userId: string, userName: string): Promise<CajaEntity> {
-    // Verificar que no haya una caja abierta para la misma sede
-    const cajaAbierta = await this.getCajaActual(dto.branchId);
-    if (cajaAbierta) {
-      throw new BadRequestException('Ya existe una caja abierta para esta sede');
+  async openCashbox(dto: OpenCashboxDto, userId: string, userName: string): Promise<CashboxEntity> {
+    // Verify that there is no open cashbox for the same branch
+    const openCashbox = await this.getCurrentCashbox(dto.branchId);
+    if (openCashbox) {
+      throw new BadRequestException('There is already an open cashbox for this branch');
     }
 
-    const caja = this.cajaRepository.create({
+    const cashbox = this.cashboxRepository.create({
       fecha: new Date().toISOString().split('T')[0],
-      montoInicial: dto.montoInicial,
+      montoInicial: dto.initialAmount,
       montoFinal: null,
       abierta: true,
       abiertaPorId: userId,
@@ -44,60 +44,60 @@ export class CajaUseCase {
       branchId: dto.branchId ?? null,
     });
 
-    return this.cajaRepository.save(caja);
+    return this.cashboxRepository.save(cashbox);
   }
 
-  async cerrarCaja(dto: CerrarCajaDto, userId: string, userName: string, branchId?: string): Promise<CajaEntity> {
-    const caja = await this.getCajaActual(branchId);
-    if (!caja) throw new NotFoundException('No hay una caja abierta');
+  async closeCashbox(dto: CloseCashboxDto, userId: string, userName: string, branchId?: string): Promise<CashboxEntity> {
+    const cashbox = await this.getCurrentCashbox(branchId);
+    if (!cashbox) throw new NotFoundException('No open cashbox found');
 
-    caja.montoFinal = dto.montoFinal;
-    caja.abierta = false;
-    caja.cerradaPorId = userId;
-    caja.cerradaPor = userName;
+    cashbox.montoFinal = dto.finalAmount;
+    cashbox.abierta = false;
+    cashbox.cerradaPorId = userId;
+    cashbox.cerradaPor = userName;
 
-    return this.cajaRepository.save(caja);
+    return this.cashboxRepository.save(cashbox);
   }
 
-  async getHistorial(branchId?: string): Promise<CajaEntity[]> {
+  async getHistory(branchId?: string): Promise<CashboxEntity[]> {
     const where: any = {};
     if (branchId) where.branchId = branchId;
-    return this.cajaRepository.find({
+    return this.cashboxRepository.find({
       where,
       order: { createdAt: 'DESC' },
       take: 30,
     });
   }
 
-  // ── Movimientos ─────────────────────────────────────────────────────────────
+  // ── Movements ─────────────────────────────────────────────────────────────
 
-  async getMovimientos(cajaId?: string): Promise<MovimientoEntity[]> {
-    if (cajaId) {
-      return this.movimientoRepository.find({
-        where: { cajaId },
+  async getMovements(cashboxId?: string): Promise<MovementEntity[]> {
+    if (cashboxId) {
+      return this.movementRepository.find({
+        where: { cashboxId },
         order: { createdAt: 'DESC' },
       });
     }
-    // Si no se pasa cajaId, devuelve los de la caja abierta actual
-    const caja = await this.getCajaActual();
-    if (!caja) return [];
-    return this.movimientoRepository.find({
-      where: { cajaId: caja.id },
+    // If cashboxId is not provided, return movements from current open cashbox
+    const cashbox = await this.getCurrentCashbox();
+    if (!cashbox) return [];
+    return this.movementRepository.find({
+      where: { cashboxId: cashbox.id },
       order: { createdAt: 'DESC' },
     });
   }
 
-  async createMovimiento(dto: CreateMovimientoDto, branchId?: string): Promise<MovimientoEntity> {
-    const caja = await this.getCajaActual(branchId);
-    if (!caja) throw new BadRequestException('No hay una caja abierta. Abra la caja primero.');
+  async createMovement(dto: CreateMovementDto, branchId?: string): Promise<MovementEntity> {
+    const cashbox = await this.getCurrentCashbox(branchId);
+    if (!cashbox) throw new BadRequestException('No open cashbox found. Please open the cashbox first.');
 
-    const movimiento = this.movimientoRepository.create({
-      cajaId: caja.id,
-      tipo: dto.tipo,
-      monto: dto.monto,
-      descripcion: dto.descripcion,
+    const movement = this.movementRepository.create({
+      cashboxId: cashbox.id,
+      type: dto.type,
+      amount: dto.amount,
+      description: dto.description,
     });
 
-    return this.movimientoRepository.save(movimiento);
+    return this.movementRepository.save(movement);
   }
 }

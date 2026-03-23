@@ -1,36 +1,36 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString, IsUUID, Min, IsIn } from 'class-validator';
 
-export class AbrirCajaDto {
+export class OpenCashboxDto {
   @IsNumber()
   @Min(0)
-  @ApiProperty({ description: 'Monto inicial en caja', example: 50000 })
-  montoInicial: number;
+  @ApiProperty({ description: 'Initial amount in cashbox', example: 50000 })
+  initialAmount: number;
 
   @IsUUID()
   @IsOptional()
-  @ApiProperty({ description: 'UUID de la sede', required: false })
+  @ApiProperty({ description: 'Branch UUID', required: false })
   branchId?: string;
 }
 
-export class CerrarCajaDto {
+export class CloseCashboxDto {
   @IsNumber()
   @Min(0)
-  @ApiProperty({ description: 'Monto final contado en caja', example: 180000 })
-  montoFinal: number;
+  @ApiProperty({ description: 'Final amount counted in cashbox', example: 180000 })
+  finalAmount: number;
 }
 
-export class CreateMovimientoDto {
-  @IsIn(['ingreso', 'egreso', 'gasto'])
-  @ApiProperty({ description: 'Tipo de movimiento', enum: ['ingreso', 'egreso', 'gasto'] })
-  tipo: 'ingreso' | 'egreso' | 'gasto';
+export class CreateMovementDto {
+  @IsIn(['income', 'expense', 'cost'])
+  @ApiProperty({ description: 'Movement type', enum: ['income', 'expense', 'cost'] })
+  type: 'income' | 'expense' | 'cost';
 
   @IsNumber()
   @Min(0)
-  @ApiProperty({ description: 'Monto del movimiento', example: 15000 })
-  monto: number;
+  @ApiProperty({ description: 'Movement amount', example: 15000 })
+  amount: number;
 
   @IsString()
-  @ApiProperty({ description: 'Descripción del movimiento', example: 'Pago pedido #123' })
-  descripcion: string;
+  @ApiProperty({ description: 'Movement description', example: 'Payment order #123' })
+  description: string;
 }

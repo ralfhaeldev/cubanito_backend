@@ -28,8 +28,8 @@ import { ProductEntity } from '../products/domain/entities/product.entity';
 import { IngredientsEntity } from '../ingredients/domain/entities/ingredients.entity';
 import { OrderEntity } from '../orders/domain/entities/order.entity';
 import { OrderItemEntity } from '../orders/domain/entities/order-item.entity';
-import { CajaEntity } from '../caja/domain/entities/caja.entity';
-import { MovimientoEntity } from '../caja/domain/entities/movimiento.entity';
+import { CashboxEntity } from '../cashbox/domain/entities/cashbox.entity';
+import { MovementEntity } from '../cashbox/domain/entities/movement.entity';
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 import { Role } from '../common/enums/roles.enum';
@@ -57,8 +57,8 @@ const AppDataSource = new DataSource({
     IngredientsEntity,
     OrderEntity,
     OrderItemEntity,
-    CajaEntity,
-    MovimientoEntity,
+    CashboxEntity,
+    MovementEntity,
   ],
 });
 
@@ -93,12 +93,12 @@ async function seed() {
   const ingredientRepo = AppDataSource.getRepository(IngredientsEntity);
   const orderRepo = AppDataSource.getRepository(OrderEntity);
   const orderItemRepo = AppDataSource.getRepository(OrderItemEntity);
-  const cajaRepo = AppDataSource.getRepository(CajaEntity);
-  const movimientoRepo = AppDataSource.getRepository(MovimientoEntity);
+  const cajaRepo = AppDataSource.getRepository(CashboxEntity);
+  const movimientoRepo = AppDataSource.getRepository(MovementEntity);
 
   // ── 1. Limpiar datos existentes (en orden correcto por FK) ──────────────────
   console.log('🗑️  Limpiando datos existentes...');
-  await AppDataSource.query('TRUNCATE TABLE movimientos, caja, order_items, orders, ingredients, inventory_adjustments, products, inventory, users, branches RESTART IDENTITY CASCADE');
+  await AppDataSource.query('TRUNCATE TABLE movement, cashbox, order_items, orders, ingredients, inventory_adjustments, products, inventory, users, branches RESTART IDENTITY CASCADE');
   console.log('✅ Datos eliminados.\n');
 
   // ── 2. Sedes (Branches) ───────────────────────────────────────────────────

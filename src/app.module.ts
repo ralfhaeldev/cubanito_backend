@@ -13,7 +13,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { OrdersModule } from './orders/orders.module';
 import { ReportsModule } from './reports/reports.module';
-import { CajaModule } from './caja/caja.module';
+import { CashboxModule } from './cashbox/cashbox.module';
 
 @Module({
   imports: [
@@ -41,7 +41,7 @@ import { CajaModule } from './caja/caja.module';
     IngredientsModule,
     OrdersModule,
     ReportsModule,
-    CajaModule,
+    CashboxModule,
   ],
   controllers: [],
   providers: [],

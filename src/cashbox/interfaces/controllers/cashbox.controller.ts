@@ -3,76 +3,76 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthGuard } from '@nestjs/passport';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/common/enums/roles.enum';
-import { CajaUseCase } from '../../application/use-cases/caja.use-case';
-import { AbrirCajaDto, CerrarCajaDto, CreateMovimientoDto } from '../dtos/caja.dto';
+import { CashboxUseCase } from '../../application/use-cases/cashbox.use-case';
+import { OpenCashboxDto, CloseCashboxDto, CreateMovementDto } from '../dtos/cashbox.dto';
 
-@ApiTags('Caja')
+@ApiTags('Cashbox')
 @ApiBearerAuth()
-@Controller('caja')
-export class CajaController {
-  constructor(private readonly cajaUseCase: CajaUseCase) {}
+@Controller('cashbox')
+export class CashboxController {
+  constructor(private readonly cashboxUseCase: CashboxUseCase) {}
 
   @Get()
   @UseGuards(AuthGuard())
-  @ApiOperation({ summary: 'Obtener caja actual abierta' })
-  @ApiResponse({ status: 200, description: 'Caja actual o null si no hay ninguna abierta' })
-  getCajaActual(@Query('branchId') branchId?: string) {
-    return this.cajaUseCase.getCajaActual(branchId);
+  @ApiOperation({ summary: 'Get current open cashbox' })
+  @ApiResponse({ status: 200, description: 'Current cashbox or null if none opened' })
+  getCurrentCashbox(@Query('branchId') branchId?: string) {
+    return this.cashboxUseCase.getCurrentCashbox(branchId);
   }
 
-  @Post('abrir')
+  @Post('open')
   @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
-  @ApiOperation({ summary: 'Abrir nueva sesión de caja' })
-  @ApiResponse({ status: 201, description: 'Caja abierta exitosamente' })
-  abrirCaja(@Body() dto: AbrirCajaDto, @Request() req: any) {
+  @ApiOperation({ summary: 'Open new cashbox session' })
+  @ApiResponse({ status: 201, description: 'Cashbox opened successfully' })
+  openCashbox(@Body() dto: OpenCashboxDto, @Request() req: any) {
     const userId = req.user?.id ?? 'system';
     const userName = req.user?.fullName ?? 'Admin';
-    return this.cajaUseCase.abrirCaja(dto, userId, userName);
+    return this.cashboxUseCase.openCashbox(dto, userId, userName);
   }
 
-  @Post('cerrar')
+  @Post('close')
   @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
-  @ApiOperation({ summary: 'Cerrar sesión de caja actual' })
-  @ApiResponse({ status: 200, description: 'Caja cerrada exitosamente' })
-  cerrarCaja(
-    @Body() dto: CerrarCajaDto,
+  @ApiOperation({ summary: 'Close current cashbox session' })
+  @ApiResponse({ status: 200, description: 'Cashbox closed successfully' })
+  closeCashbox(
+    @Body() dto: CloseCashboxDto,
     @Request() req: any,
     @Query('branchId') branchId?: string,
   ) {
     const userId = req.user?.id ?? 'system';
     const userName = req.user?.fullName ?? 'Admin';
-    return this.cajaUseCase.cerrarCaja(dto, userId, userName, branchId);
+    return this.cashboxUseCase.closeCashbox(dto, userId, userName, branchId);
   }
 
-  @Get('historial')
+  @Get('history')
   @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
-  @ApiOperation({ summary: 'Historial de cajas cerradas' })
-  getHistorial(@Query('branchId') branchId?: string) {
-    return this.cajaUseCase.getHistorial(branchId);
+  @ApiOperation({ summary: 'Closed cashbox history' })
+  getHistory(@Query('branchId') branchId?: string) {
+    return this.cashboxUseCase.getHistory(branchId);
   }
 }
 
-@ApiTags('Movimientos')
+@ApiTags('Movements')
 @ApiBearerAuth()
-@Controller('movimientos')
-export class MovimientosController {
-  constructor(private readonly cajaUseCase: CajaUseCase) {}
+@Controller('movements')
+export class MovementsController {
+  constructor(private readonly cashboxUseCase: CashboxUseCase) {}
 
   @Get()
   @UseGuards(AuthGuard())
-  @ApiOperation({ summary: 'Listar movimientos de la caja actual' })
-  getMovimientos(@Query('cajaId') cajaId?: string) {
-    return this.cajaUseCase.getMovimientos(cajaId);
+  @ApiOperation({ summary: 'List movements of current cashbox' })
+  getMovements(@Query('cashboxId') cashboxId?: string) {
+    return this.cashboxUseCase.getMovements(cashboxId);
   }
 
   @Post()
   @Auth(Role.ADMIN_SEDE, Role.SUPER_ADMIN, Role.OWNER)
-  @ApiOperation({ summary: 'Registrar un movimiento de caja' })
-  @ApiResponse({ status: 201, description: 'Movimiento registrado' })
-  createMovimiento(
-    @Body() dto: CreateMovimientoDto,
+  @ApiOperation({ summary: 'Register a cashbox movement' })
+  @ApiResponse({ status: 201, description: 'Movement registered' })
+  createMovement(
+    @Body() dto: CreateMovementDto,
     @Query('branchId') branchId?: string,
   ) {
-    return this.cajaUseCase.createMovimiento(dto, branchId);
+    return this.cashboxUseCase.createMovement(dto, branchId);
   }
 }
