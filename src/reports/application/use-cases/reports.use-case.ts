@@ -213,16 +213,16 @@ export class ReportsUseCase {
     const where: any = {};
     if (branchId) where.branchId = branchId;
 
-    const cajas = await this.cajaRepository.find({
+    const cajas = await this.cashboxRepository.find({
       where,
       order: { createdAt: 'DESC' },
       take: 30,
-      relations: ['movimientos'],
+      relations: ['movements'],
     });
 
     return cajas.map((c) => {
-      const ingresos = c.movimientos
-        ?.filter((m) => m.tipo === 'ingreso')
+      const ingresos = c.movements
+        ?.filter((m) => m.type === 'income')
         .reduce((s, m) => s + Number(m.monto), 0) ?? 0;
       const egresos = c.movimientos
         ?.filter((m) => m.tipo !== 'ingreso')

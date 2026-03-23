@@ -334,12 +334,12 @@ async function seed() {
     // Movimientos de ejemplo por caja histórica
     const ingreso = h.montoFinal - h.montoInicial;
     await movimientoRepo.save([
-      movimientoRepo.create({ cajaId: cajaH.id, tipo: 'ingreso', monto: ingreso * 0.9, descripcion: 'Ventas del día' }),
-      movimientoRepo.create({ cajaId: cajaH.id, tipo: 'gasto', monto: ingreso * 0.05, descripcion: 'Compra de insumos' }),
+      movimientoRepo.create({ cashboxId: cajaH.id, type: 'income', amount: ingreso * 0.9, description: 'Sales of the day' }),
+      movimientoRepo.create({ cashboxId: cajaH.id, type: 'cost', amount: ingreso * 0.05, description: 'Purchase of supplies' }),
     ]);
   }
 
-  // Caja actual (abierta)
+  // Current cashbox (open)
   const cajaHoy = await cajaRepo.save(
     cajaRepo.create({
       fecha: new Date().toISOString().split('T')[0],
@@ -354,23 +354,23 @@ async function seed() {
     }),
   );
 
-  // Movimientos de la caja actual
+  // Movements of current cashbox
   await movimientoRepo.save([
     movimientoRepo.create({
-      cajaId: cajaHoy.id,
-      tipo: 'ingreso',
-      monto: 20000,
-      descripcion: 'Pago pedido Cubanito BBQ + Papa Francesa',
+      cashboxId: cajaHoy.id,
+      type: 'income',
+      amount: 20000,
+      description: 'Payment order Cubanito BBQ + French Fries',
     }),
     movimientoRepo.create({
-      cajaId: cajaHoy.id,
-      tipo: 'gasto',
-      monto: 8000,
-      descripcion: 'Compra insumos — pan',
+      cashboxId: cajaHoy.id,
+      type: 'cost',
+      amount: 8000,
+      description: 'Purchase supplies — bread',
     }),
   ]);
 
-  console.log('  ✅ 7 sesiones de caja creadas (6 cerradas + 1 abierta hoy)\n');
+  console.log('  ✅ 7 cashbox sessions created (6 closed + 1 open today)\n');
 
   // ── Fin ────────────────────────────────────────────────────────────────────
   console.log('═══════════════════════════════════════════════════════════');
