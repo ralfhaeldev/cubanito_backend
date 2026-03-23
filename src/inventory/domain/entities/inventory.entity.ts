@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
-import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from 'src/ingredients/domain/entities/ingredient.entity';
 
 /**
  * Entity que representa los artículos del inventario
@@ -54,8 +54,8 @@ export class InventoryEntity {
   @JoinColumn({ name: 'branchId' })
   branch: BranchEntity;
 
-  @OneToMany(() => IngredientsEntity, (ingredient) => ingredient.inventoryItem)
-  ingredients: IngredientsEntity[];
+  @OneToMany(() => IngredientEntity, (ingredient) => ingredient.inventoryItem)
+  ingredients: IngredientEntity[];
 
   @CreateDateColumn()
   createdAt: Date;

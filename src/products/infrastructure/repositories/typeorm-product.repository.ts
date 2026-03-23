@@ -6,7 +6,7 @@ import { ProductEntity } from 'src/products/domain/entities/product.entity';
 import { ProductRepository } from 'src/products/domain/product-repository.interface';
 import { CreateProductDto } from 'src/products/interfaces/dtos/create-product.dto';
 import { UpdateProductDto } from 'src/products/interfaces/dtos/update-product.dto';
-import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from 'src/ingredients/domain/entities/ingredient.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -14,8 +14,8 @@ export class TypeormProductRepository implements ProductRepository<any> {
   constructor(
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
-    @InjectRepository(IngredientsEntity)
-    private readonly ingredientRepository: Repository<IngredientsEntity>,
+    @InjectRepository(IngredientEntity)
+    private readonly ingredientRepository: Repository<IngredientEntity>,
   ) {}
 
   async create(dto: CreateProductDto): Promise<any> {

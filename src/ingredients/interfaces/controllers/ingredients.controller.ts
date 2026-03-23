@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CrudIngredientsUseCase } from '../../application/use-cases/crud-ingredients.use-case';
-import { CreateIngredientDto, UpdateIngredientDto } from '../dtos/ingredient.dto';
+import { CreateIngredientDto, UpdateIngredientDto } from '../dtos/ingredients.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/common/enums/roles.enum';

@@ -8,7 +8,7 @@ import { OrderStatus, OrderType } from 'src/common/enums/order-status.enum';
 import { ProductType } from 'src/common/enums/product-status.enum';
 import { ProductEntity } from 'src/products/domain/entities/product.entity';
 import { InventoryEntity } from 'src/inventory/domain/entities/inventory.entity';
-import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from 'src/ingredients/domain/entities/ingredient.entity';
 import { Role } from 'src/common/enums/roles.enum';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
@@ -26,8 +26,8 @@ export class CrudOrderUseCase {
     private readonly productRepository: Repository<ProductEntity>,
     @InjectRepository(InventoryEntity)
     private readonly inventoryRepository: Repository<InventoryEntity>,
-    @InjectRepository(IngredientsEntity)
-    private readonly ingredientsRepository: Repository<IngredientsEntity>,
+    @InjectRepository(IngredientEntity)
+    private readonly ingredientsRepository: Repository<IngredientEntity>,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, userId: string, userBranchId?: string): Promise<any> {

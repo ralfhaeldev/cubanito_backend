@@ -1,10 +1,10 @@
-import { IngredientsEntity } from './entities/ingredients.entity';
+import { IngredientEntity } from './entities/ingredient.entity';
 
 export interface IIngredientsRepository {
-  create(ingredient: IngredientsEntity): Promise<IngredientsEntity>;
-  findById(id: string): Promise<IngredientsEntity | null>;
-  findByProductId(productId: string): Promise<IngredientsEntity[]>;
-  update(id: string, ingredient: Partial<IngredientsEntity>): Promise<IngredientsEntity>;
+  create(ingredient: IngredientEntity): Promise<IngredientEntity>;
+  findById(id: string): Promise<IngredientEntity | null>;
+  findByProductId(productId: string): Promise<IngredientEntity[]>;
+  update(id: string, ingredient: Partial<IngredientEntity>): Promise<IngredientEntity>;
   delete(id: string): Promise<void>;
 }
 

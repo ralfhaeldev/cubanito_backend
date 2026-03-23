@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PaginationDto } from 'src/common/dtos/pagination.dto';
-import { TypePaymenEntity } from 'src/type-payment/domain/entities/type-paymen.entity';
+import { TypePaymentEntity } from 'src/type-payment/domain/entities/type-payment.entity';
 import { TypePaymentRepository } from 'src/type-payment/domain/repository.interface';
 
 @Injectable()
 export class CrudTypePaymentUseCase {
   constructor(
-    private readonly typePaymentRepository: TypePaymentRepository<TypePaymenEntity>,
+    private readonly typePaymentRepository: TypePaymentRepository<TypePaymentEntity>,
   ) {}
 
   async findAll(paginationDto: PaginationDto) {

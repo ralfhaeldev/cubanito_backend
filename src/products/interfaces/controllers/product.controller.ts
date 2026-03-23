@@ -33,7 +33,7 @@ export class ProductController {
   }
 
   @Get()
-  @Auth(Role.USER)
+  @UseGuards(AuthGuard())
   findAll(@Query() paginationDto: PaginationDto) {
     return this.crudProductUseCase.findAll(paginationDto);
   }

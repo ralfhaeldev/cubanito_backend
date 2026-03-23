@@ -25,7 +25,7 @@ import { UserEntity } from '../auth/domain/entities/user.entity';
 import { InventoryEntity } from '../inventory/domain/entities/inventory.entity';
 import { InventoryAdjustmentEntity } from '../inventory/domain/entities/inventory-adjustment.entity';
 import { ProductEntity } from '../products/domain/entities/product.entity';
-import { IngredientsEntity } from '../ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from '../ingredients/domain/entities/ingredient.entity';
 import { OrderEntity } from '../orders/domain/entities/order.entity';
 import { OrderItemEntity } from '../orders/domain/entities/order-item.entity';
 import { CashboxEntity } from '../cashbox/domain/entities/cashbox.entity';
@@ -54,7 +54,7 @@ const AppDataSource = new DataSource({
     InventoryEntity,
     InventoryAdjustmentEntity,
     ProductEntity,
-    IngredientsEntity,
+    IngredientEntity,
     OrderEntity,
     OrderItemEntity,
     CashboxEntity,
@@ -90,7 +90,7 @@ async function seed() {
   const inventoryRepo = AppDataSource.getRepository(InventoryEntity);
   const adjustmentRepo = AppDataSource.getRepository(InventoryAdjustmentEntity);
   const productRepo = AppDataSource.getRepository(ProductEntity);
-  const ingredientRepo = AppDataSource.getRepository(IngredientsEntity);
+  const ingredientRepo = AppDataSource.getRepository(IngredientEntity);
   const orderRepo = AppDataSource.getRepository(OrderEntity);
   const orderItemRepo = AppDataSource.getRepository(OrderItemEntity);
   const cajaRepo = AppDataSource.getRepository(CashboxEntity);
@@ -117,41 +117,41 @@ async function seed() {
   const [, adminUser, meseroUser, cocinaUser, domUser] = await userRepo.save([
     userRepo.create({
       email: 'superadmin@test.com',
-      pawssowrd: hashPwd('1234'),
+      password: hashPwd('1234'),
       fullName: 'Carlos Super',
-      roles: [Role.SUPER_ADMIN],
+      rol: Role.SUPER_ADMIN,
       isActive: true,
       branchId: null,
     }),
     userRepo.create({
       email: 'admin@sede1.com',
-      pawssowrd: hashPwd('1234'),
+      password: hashPwd('1234'),
       fullName: 'Ana Admin',
-      roles: [Role.ADMIN],
+      rol: Role.ADMIN_SEDE,
       isActive: true,
       branchId: sedeCentro.id,
     }),
     userRepo.create({
       email: 'mesero@sede1.com',
-      pawssowrd: hashPwd('1234'),
+      password: hashPwd('1234'),
       fullName: 'Pedro Mesero',
-      roles: [Role.MESERO],
+      rol: Role.MESERO,
       isActive: true,
       branchId: sedeCentro.id,
     }),
     userRepo.create({
       email: 'cocina@sede1.com',
-      pawssowrd: hashPwd('1234'),
+      password: hashPwd('1234'),
       fullName: 'Luis Cocina',
-      roles: [Role.COCINA],
+      rol: Role.COCINA,
       isActive: true,
       branchId: sedeCentro.id,
     }),
     userRepo.create({
       email: 'domiciliario@sede1.com',
-      pawssowrd: hashPwd('1234'),
+      password: hashPwd('1234'),
       fullName: 'Mario Domicilio',
-      roles: [Role.DOMICILIARIO],
+      rol: Role.DOMICILIARIO,
       isActive: true,
       branchId: sedeCentro.id,
     }),
@@ -207,12 +207,12 @@ async function seed() {
   // ── 5. Productos ──────────────────────────────────────────────────────────
   console.log('🍔 Creando productos...');
   const [cubanito, cubanitoespecial, cubanitoBbq, papaFrancesa, gaseosaP, aguaP] = await productRepo.save([
-    productRepo.create({ title: 'Cubanito Clásico', description: 'Cubanito tradicional con carne, queso, lechuga y tomate', sellingPrice: 12000, type: ProductType.PREPARADO, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
-    productRepo.create({ title: 'Cubanito Especial', description: 'Con jamón serrano, queso cheddar y cebolla caramelizada', sellingPrice: 15000, type: ProductType.PREPARADO, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
-    productRepo.create({ title: 'Cubanito BBQ', description: 'Con salsa BBQ ahumada', sellingPrice: 14000, type: ProductType.PREPARADO, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
-    productRepo.create({ title: 'Papa Francesa', description: 'Papas criollas fritas en aceite vegetal', sellingPrice: 6000, type: ProductType.PREPARADO, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
-    productRepo.create({ title: 'Gaseosa', description: 'Gaseosa 350ml fría', sellingPrice: 3000, type: ProductType.SIMPLE, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
-    productRepo.create({ title: 'Agua', description: 'Agua mineral 500ml', sellingPrice: 2000, type: ProductType.SIMPLE, status: ProductStatus.ACTIVE, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Cubanito Clásico', sellingPrice: 12000, type: ProductType.PREPARADO, isActive: true, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Cubanito Especial', sellingPrice: 15000, type: ProductType.PREPARADO, isActive: true, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Cubanito BBQ', sellingPrice: 14000, type: ProductType.PREPARADO, isActive: true, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Papa Francesa', sellingPrice: 6000, type: ProductType.PREPARADO, isActive: true, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Gaseosa', sellingPrice: 3000, type: ProductType.SIMPLE, isActive: true, branchId: sedeCentro.id }),
+    productRepo.create({ title: 'Agua', sellingPrice: 2000, type: ProductType.SIMPLE, isActive: true, branchId: sedeCentro.id }),
   ]);
   console.log('  ✅ 6 productos creados\n');
 
@@ -263,11 +263,11 @@ async function seed() {
     orderItemRepo.create({ orderId: order1.id, productId: gaseosaP.id, quantity: 1, unitPrice: 3000, realCost: 0 }),
   ]);
 
-  // Pedido 2 — DELIVERY, EN_PROCESO
+  // Pedido 2 — DOMICILIO, EN_PROCESO
   const order2 = await orderRepo.save(
     orderRepo.create({
       branchId: sedeCentro.id,
-      type: OrderType.DELIVERY,
+      type: OrderType.DOMICILIO,
       status: OrderStatus.EN_PROCESO,
       createdByUserId: meseroUser.id,
       notes: 'Entregar en Cra 45 #23-10. Cliente: Juan García — 3001234567',

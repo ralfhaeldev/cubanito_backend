@@ -8,15 +8,15 @@ import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class TypeormTypePaymentRepository
-  implements TypePaymentRepository<TypePaymenEntity>
+  implements TypePaymentRepository<TypePaymentEntity>
 {
   constructor(
-    @InjectRepository(TypePaymenEntity)
-    private readonly typePaymentRepository: Repository<TypePaymenEntity>,
+    @InjectRepository(TypePaymentEntity)
+    private readonly typePaymentRepository: Repository<TypePaymentEntity>,
   ) {}
 
-  async findOne(id: string): Promise<TypePaymenEntity> {
-    let typePayments: TypePaymenEntity | null = null;
+  async findOne(id: string): Promise<TypePaymentEntity> {
+    let typePayments: TypePaymentEntity | null = null;
 
     if (isUUID(id)) {
       typePayments = await this.typePaymentRepository.findOneBy({ id });
@@ -27,7 +27,7 @@ export class TypeormTypePaymentRepository
     return typePayments;
   }
 
-  async findAll(pagintationDto: PaginationDto): Promise<TypePaymenEntity[]> {
+  async findAll(pagintationDto: PaginationDto): Promise<TypePaymentEntity[]> {
     const { limit = 10, offset = 0, term = null } = pagintationDto;
     const where = term
       ? {

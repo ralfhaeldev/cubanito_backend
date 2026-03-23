@@ -24,7 +24,7 @@ export class TypeormAuthRepository implements AuthRepository {
   async create(createUserDto: CreateUserDto): Promise<LoginResponse> {
     try {
       const { password, nombre, rol, sedeId, ...rest } = createUserDto as any;
-      const user = this.userRepository.create({
+      let user = this.userRepository.create({
         ...rest,
         fullName: nombre ?? rest.fullName,
         password: bcrypt.hashSync(password, 10),
@@ -32,7 +32,7 @@ export class TypeormAuthRepository implements AuthRepository {
         branchId: sedeId ?? rest.branchId ?? null,
       });
 
-      await this.userRepository.save(user);
+      user = await this.userRepository.save(user);
       return this.buildLoginResponse(user);
     } catch (error) {
       handleDBExceptions(error);

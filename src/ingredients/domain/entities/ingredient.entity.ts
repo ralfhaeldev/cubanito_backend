@@ -3,7 +3,7 @@ import { ProductEntity } from 'src/products/domain/entities/product.entity';
 import { InventoryEntity } from 'src/inventory/domain/entities/inventory.entity';
 
 @Entity('ingredients')
-export class IngredientsEntity {
+export class IngredientEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

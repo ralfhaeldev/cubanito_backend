@@ -9,7 +9,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
 import { ProductEntity } from 'src/products/domain/entities/product.entity';
 import { InventoryEntity } from 'src/inventory/domain/entities/inventory.entity';
-import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from 'src/ingredients/domain/entities/ingredient.entity';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.e
       BranchEntity,
       ProductEntity,
       InventoryEntity,
-      IngredientsEntity,
+      IngredientEntity,
     ]),
     AuthModule,
   ],

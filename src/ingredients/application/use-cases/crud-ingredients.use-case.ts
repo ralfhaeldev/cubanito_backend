@@ -1,23 +1,23 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IngredientsEntity } from '../../domain/entities/ingredients.entity';
-import { CreateIngredientDto, UpdateIngredientDto } from '../../interfaces/dtos/ingredient.dto';
+import { IngredientEntity } from '../../domain/entities/ingredient.entity';
+import { CreateIngredientDto, UpdateIngredientDto } from '../../interfaces/dtos/ingredients.dto';
 import { ProductEntity } from 'src/products/domain/entities/product.entity';
 import { InventoryEntity } from 'src/inventory/domain/entities/inventory.entity';
 
 @Injectable()
 export class CrudIngredientsUseCase {
   constructor(
-    @InjectRepository(IngredientsEntity)
-    private readonly ingredientsRepository: Repository<IngredientsEntity>,
+    @InjectRepository(IngredientEntity)
+    private readonly ingredientsRepository: Repository<IngredientEntity>,
     @InjectRepository(ProductEntity)
     private readonly productRepository: Repository<ProductEntity>,
     @InjectRepository(InventoryEntity)
     private readonly inventoryRepository: Repository<InventoryEntity>,
   ) {}
 
-  async create(createIngredientDto: CreateIngredientDto): Promise<IngredientsEntity> {
+  async create(createIngredientDto: CreateIngredientDto): Promise<IngredientEntity> {
     const product = await this.productRepository.findOne({
       where: { id: createIngredientDto.productId },
     });
@@ -45,7 +45,7 @@ export class CrudIngredientsUseCase {
     return this.ingredientsRepository.save(ingredient);
   }
 
-  async findByProductId(productId: string): Promise<IngredientsEntity[]> {
+  async findByProductId(productId: string): Promise<IngredientEntity[]> {
     const product = await this.productRepository.findOne({
       where: { id: productId },
     });
@@ -60,7 +60,7 @@ export class CrudIngredientsUseCase {
     });
   }
 
-  async findOne(id: string): Promise<IngredientsEntity> {
+  async findOne(id: string): Promise<IngredientEntity> {
     const ingredient = await this.ingredientsRepository.findOne({
       where: { id },
       relations: ['inventoryItem', 'product'],
@@ -76,7 +76,7 @@ export class CrudIngredientsUseCase {
   async update(
     id: string,
     updateIngredientDto: UpdateIngredientDto,
-  ): Promise<IngredientsEntity> {
+  ): Promise<IngredientEntity> {
     const ingredient = await this.findOne(id);
 
     if (updateIngredientDto.quantity !== undefined) {

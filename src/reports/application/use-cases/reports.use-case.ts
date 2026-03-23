@@ -223,10 +223,10 @@ export class ReportsUseCase {
     return cajas.map((c) => {
       const ingresos = c.movements
         ?.filter((m) => m.type === 'income')
-        .reduce((s, m) => s + Number(m.monto), 0) ?? 0;
-      const egresos = c.movimientos
-        ?.filter((m) => m.tipo !== 'ingreso')
-        .reduce((s, m) => s + Number(m.monto), 0) ?? 0;
+        .reduce((s, m) => s + Number(m.amount), 0) ?? 0;
+      const egresos = c.movements
+        ?.filter((m) => m.type !== 'income')
+        .reduce((s, m) => s + Number(m.amount), 0) ?? 0;
       return {
         id: c.id,
         fecha: c.fecha,

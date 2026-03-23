@@ -1,7 +1,7 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { ProductType } from 'src/common/enums/product-status.enum';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
-import { IngredientsEntity } from 'src/ingredients/domain/entities/ingredients.entity';
+import { IngredientEntity } from 'src/ingredients/domain/entities/ingredient.entity';
 
 @Entity('products')
 export class ProductEntity {
@@ -34,8 +34,8 @@ export class ProductEntity {
   @JoinColumn({ name: 'branchId' })
   branch: BranchEntity;
 
-  @OneToMany(() => IngredientsEntity, (ingredient) => ingredient.product, { cascade: true })
-  ingredients: IngredientsEntity[];
+  @OneToMany(() => IngredientEntity, (ingredient) => ingredient.product, { cascade: true })
+  ingredients: IngredientEntity[];
 
   @CreateDateColumn()
   createdAt: Date;
