@@ -6,7 +6,7 @@ import { OrderItemEntity } from 'src/orders/domain/entities/order-item.entity';
 import { OrderStatus, OrderType } from 'src/common/enums/order-status.enum';
 import { ReportFiltersDto, ReportPeriod, SalesReportDto } from '../../interfaces/dtos/report.dto';
 import { BranchEntity } from 'src/branches/domain/entities/branch.entity';
-import { CajaEntity } from 'src/caja/domain/entities/caja.entity';
+import { CashboxEntity } from 'src/cashbox/domain/entities/cashbox.entity';
 
 @Injectable()
 export class ReportsUseCase {
@@ -17,8 +17,8 @@ export class ReportsUseCase {
     private readonly orderItemRepository: Repository<OrderItemEntity>,
     @InjectRepository(BranchEntity)
     private readonly branchRepository: Repository<BranchEntity>,
-    @InjectRepository(CajaEntity)
-    private readonly cajaRepository: Repository<CajaEntity>,
+    @InjectRepository(CashboxEntity)
+    private readonly cashboxRepository: Repository<CashboxEntity>,
   ) {}
 
   async getSalesReport(filters: ReportFiltersDto): Promise<SalesReportDto> {
